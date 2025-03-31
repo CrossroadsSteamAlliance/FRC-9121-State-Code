@@ -7,7 +7,7 @@ import frc.robot.Constants.IntakeConstats;
 import frc.robot.Subsystems.IntakeSubsystem;
 
 public class IntakeCommand extends Command{
-    private enum Speed {FULL_IN, HALF_IN, FULL_OUT, HALF_OUT}
+    public static enum Speed {FULL_IN, HALF_IN, FULL_OUT, HALF_OUT}
     private Speed state;
 
     IntakeSubsystem subsystem;

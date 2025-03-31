@@ -4,6 +4,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.IntakeConstats;
 
@@ -11,6 +12,7 @@ public class PivotSubsystem extends SubsystemBase{
     protected TalonFX mPivotLeftMotor;
     protected TalonFX mPivotRightMotor;
     
+    private double Setpoint;
     public PivotSubsystem(){
         mPivotLeftMotor = new TalonFX(IntakeConstats.kPivotLeftId);
         mPivotRightMotor = new TalonFX(IntakeConstats.kPivotRightId);
@@ -35,5 +37,11 @@ public class PivotSubsystem extends SubsystemBase{
     public void stopPivot(){
         mPivotLeftMotor.set(0);
         mPivotRightMotor.set(0);
+    }
+
+    @Override
+    public void periodic(){
+        SmartDashboard.putNumber("Setpoint", Setpoint);
+        SmartDashboard.putNumber("Current Position", mPivotLeftMotor.getPosition().getValueAsDouble());
     }
 }

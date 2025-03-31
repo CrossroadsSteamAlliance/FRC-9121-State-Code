@@ -6,6 +6,7 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ElevatorConstants;
 
@@ -52,10 +53,6 @@ public class ElevatorSubsystem extends SubsystemBase {
         return getHeight() >= Setpoint ? true : false;
     }
 
-    public void display(){
-        
-    }
-
     public double getHeight(){
         return Setpoint;
     }
@@ -67,5 +64,11 @@ public class ElevatorSubsystem extends SubsystemBase {
     public void stopElevator(){
         mElevatorLeft.set(0);
         mElevatorRight.set(0);
+    }
+
+    @Override
+    public void periodic(){
+        SmartDashboard.putBoolean("Elevator At Setpoint", atSetpoint());
+        SmartDashboard.putNumber("Elevator Current Height", getHeight());
     }
 }

@@ -1,12 +1,14 @@
 package frc.robot.Commands;
 
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Subsystems.RotateSubsystem;
 
 public class RotateCommand  extends Command{
-    public enum Position{ZERO, L, L4}
+    public static enum Position{ZERO, L, R}
     private Position pose;
     RotateSubsystem subsystem;
+    private Rotation2d rotatePose;
 
     public RotateCommand(RotateSubsystem subsystem, Position pose){
         this.subsystem = subsystem;
@@ -19,21 +21,23 @@ public class RotateCommand  extends Command{
        switch (pose) {
 
         case ZERO:
-            subsystem.rotate(0);
+            rotatePose = new Rotation2d(90);
             break;
 
         case L:
-            subsystem.rotate(Math.toRadians(90));
+            rotatePose = new Rotation2d(180);
             break;
 
-        case L4:
-            subsystem.rotate(Math.toRadians(180));
+        case R:
+            rotatePose = new Rotation2d(0);
             break;
 
         default:
             subsystem.stopRotate();
             break;
        }
+
+       subsystem.rotate(rotatePose);
     }
 
     @Override

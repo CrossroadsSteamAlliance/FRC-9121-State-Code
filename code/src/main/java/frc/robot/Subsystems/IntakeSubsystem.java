@@ -7,6 +7,7 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.IntakeConstats;
 
@@ -50,5 +51,11 @@ public class IntakeSubsystem extends SubsystemBase {
 
     public void stop(){
         stopIntake();
+    }
+
+    @Override
+    public void periodic(){
+        SmartDashboard.putBoolean("Intake Active", mTopMotor.get() > 0 || mTopMotor.get() < 0);
+        SmartDashboard.putNumber("Intake Speed", mBottomMotor.get());
     }
 }

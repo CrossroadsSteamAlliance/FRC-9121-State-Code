@@ -4,7 +4,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Subsystems.PivotSubsystem;
 
 public class PivotCommand  extends Command{
-    public enum Positions{ZERO, L1, L2, L3, L4, GROUND}
+    public static enum Positions{ZERO, L1, L23, L4, GROUND}
     private Positions pose;
     PivotSubsystem subsystem;
 

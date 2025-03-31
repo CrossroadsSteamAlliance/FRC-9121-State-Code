@@ -1,9 +1,12 @@
 package frc.robot.Subsystems;
 
+import org.dyn4j.geometry.Rotation;
+
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.IntakeConstats;
 
@@ -25,8 +28,8 @@ public class RotateSubsystem extends SubsystemBase{
         mRotMotor.getConfigurator().apply(intakeRot);
     }
 
-    public void rotate(double pos){
-        mRotMotor.setControl(new MotionMagicVoltage(pos / (2 * Math.PI)));
+    public void rotate(Rotation2d pose){
+        mRotMotor.setControl(new MotionMagicVoltage(pose.getRotations()));
     }
 
     public void zeroRotate(){

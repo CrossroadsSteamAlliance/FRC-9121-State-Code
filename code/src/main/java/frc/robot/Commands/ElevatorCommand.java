@@ -4,7 +4,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Subsystems.ElevatorSubsystem;
 
 public class ElevatorCommand extends Command{
-    public enum Position{ZERO, L1, L2, L3, L4, SUBSTATION}
+    public static enum Position{ZERO, L1, L2, L3, L4, SUBSTATION}
     private ElevatorSubsystem subsystem;
     private Position pose;
 
