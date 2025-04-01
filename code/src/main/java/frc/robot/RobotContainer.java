@@ -4,6 +4,11 @@
 
 package frc.robot;
 
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.ctre.phoenix6.swerve.SwerveRequest;
+
+import static edu.wpi.first.units.Units.*;
+
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -15,19 +20,29 @@ import frc.robot.Commands.IntakeCommand;
 import frc.robot.Commands.PivotCommand;
 import frc.robot.Commands.RotateCommand;
 import frc.robot.Constants.IntakeConstats;
+import frc.robot.Subsystems.CommandSwerveDrivetrain;
 import frc.robot.Subsystems.ElevatorSubsystem;
 import frc.robot.Subsystems.IntakeSubsystem;
 import frc.robot.Subsystems.PivotSubsystem;
 import frc.robot.Subsystems.RotateSubsystem;
+import frc.robot.generated.TunerConstants;
 
 public class RobotContainer extends Autonomous {
+  private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
+  private double MaxAngularRate = RotationsPerSecond.of(1.5).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
-  ElevatorSubsystem elevator;
-  IntakeSubsystem intake;
-  PivotSubsystem pivot;
-  RotateSubsystem rotate;
+  public final ElevatorSubsystem elevator = new ElevatorSubsystem();
+  public final IntakeSubsystem intake = new IntakeSubsystem();
+  public final PivotSubsystem pivot = new PivotSubsystem();
+  public final RotateSubsystem rotate = new RotateSubsystem();
+  public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain(); 
 
-  CommandXboxController xboxControllerOP = new CommandXboxController(0);
+  private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
+            .withDeadband(MaxSpeed * 0.25).withRotationalDeadband(MaxAngularRate * 0.2) // Add a 10% deadband
+            .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
+
+  CommandXboxController xboxControllerD = new CommandXboxController(0);
+  CommandXboxController xboxControllerOP = new CommandXboxController(1);
   CommandGenericHID launchpadHID = new CommandGenericHID(1);
 
 
@@ -36,6 +51,15 @@ public class RobotContainer extends Autonomous {
   }
 
   private void configureBindings() {
+
+    drivetrain.setDefaultCommand(
+      // Drivetrain will execute this command periodically
+      drivetrain.applyRequest(() ->
+          drive.withVelocityX(xboxControllerD.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
+              .withVelocityY(xboxControllerD.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+              .withRotationalRate(xboxControllerD.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+      )
+  );
 
     //Intake Controls (Operator)
     xboxControllerOP.rightTrigger(0.25).onTrue(new IntakeCommand(intake, IntakeCommand.Speed.FULL_IN));
