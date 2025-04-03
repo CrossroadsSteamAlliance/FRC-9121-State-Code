@@ -4,6 +4,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.IntakeConstats;
@@ -29,9 +30,9 @@ public class PivotSubsystem extends SubsystemBase{
         mPivotRightMotor.getConfigurator().apply(intakePRight);
     }
 
-       public void pivot(double pos){
-        mPivotLeftMotor.setControl(new MotionMagicVoltage(pos));
-        mPivotRightMotor.setControl(new MotionMagicVoltage(pos));
+       public void pivot(Rotation2d pos){
+        mPivotLeftMotor.setControl(new MotionMagicVoltage(pos.getRotations()));
+        mPivotRightMotor.setControl(new MotionMagicVoltage(pos.getRotations()));
     }
 
     public void stopPivot(){

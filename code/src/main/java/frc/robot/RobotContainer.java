@@ -4,87 +4,72 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.*;
+
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
-import static edu.wpi.first.units.Units.*;
-
-import edu.wpi.first.wpilibj.simulation.ElevatorSim;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.Autonomous.Autonomous;
-import frc.robot.Commands.ElevatorCommand;
-import frc.robot.Commands.IntakeCommand;
-import frc.robot.Commands.PivotCommand;
-import frc.robot.Commands.RotateCommand;
-import frc.robot.Constants.IntakeConstats;
-import frc.robot.Subsystems.CommandSwerveDrivetrain;
-import frc.robot.Subsystems.ElevatorSubsystem;
-import frc.robot.Subsystems.IntakeSubsystem;
-import frc.robot.Subsystems.PivotSubsystem;
-import frc.robot.Subsystems.RotateSubsystem;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.CommandSwerveDrivetrain;
 
-public class RobotContainer extends Autonomous {
-  private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
-  private double MaxAngularRate = RotationsPerSecond.of(1.5).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+public class RobotContainer {
+    private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
+    private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
-  public final ElevatorSubsystem elevator = new ElevatorSubsystem();
-  public final IntakeSubsystem intake = new IntakeSubsystem();
-  public final PivotSubsystem pivot = new PivotSubsystem();
-  public final RotateSubsystem rotate = new RotateSubsystem();
-  public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain(); 
-
-  private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-            .withDeadband(MaxSpeed * 0.25).withRotationalDeadband(MaxAngularRate * 0.2) // Add a 10% deadband
+    /* Setting up bindings for necessary control of the swerve drive platform */
+    private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
+            .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
+    private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
+    private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
 
-  CommandXboxController xboxControllerD = new CommandXboxController(0);
-  CommandXboxController xboxControllerOP = new CommandXboxController(1);
-  CommandGenericHID launchpadHID = new CommandGenericHID(1);
+    private final Telemetry logger = new Telemetry(MaxSpeed);
 
+    private final CommandXboxController joystick = new CommandXboxController(0);
 
-  public RobotContainer() {
-    configureBindings();
-  }
+    public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
-  private void configureBindings() {
+    public RobotContainer() {
+        configureBindings();
+    }
 
-    drivetrain.setDefaultCommand(
-      // Drivetrain will execute this command periodically
-      drivetrain.applyRequest(() ->
-          drive.withVelocityX(xboxControllerD.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
-              .withVelocityY(xboxControllerD.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-              .withRotationalRate(xboxControllerD.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
-      )
-  );
+    private void configureBindings() {
+        // Note that X is defined as forward according to WPILib convention,
+        // and Y is defined as to the left according to WPILib convention.
+        drivetrain.setDefaultCommand(
+            // Drivetrain will execute this command periodically
+            drivetrain.applyRequest(() ->
+                drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
+                    .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+                    .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+            )
+        );
 
-    //Intake Controls (Operator)
-    xboxControllerOP.rightTrigger(0.25).onTrue(new IntakeCommand(intake, IntakeCommand.Speed.FULL_IN));
-    xboxControllerOP.leftTrigger(0.25).onTrue(new IntakeCommand(intake, IntakeCommand.Speed.HALF_OUT));
+        joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
+        joystick.b().whileTrue(drivetrain.applyRequest(() ->
+            point.withModuleDirection(new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))
+        ));
 
-    //Elevator Controls (Operator)
-    xboxControllerOP.povUp().onTrue(new ElevatorCommand(elevator, ElevatorCommand.Position.L4)); //L4 Elevator Scoring
-    xboxControllerOP.povRight().onTrue(new ElevatorCommand(elevator, ElevatorCommand.Position.L3)); //L3 Elevator Scoring
-    xboxControllerOP.povDown().onTrue(new ElevatorCommand(elevator, ElevatorCommand.Position.L2)); //L2 Elevator Scoring
-    xboxControllerOP.povLeft().onTrue(new ElevatorCommand(elevator, ElevatorCommand.Position.ZERO)); //Ground Elevator Scoring
+        // Run SysId routines when holding back/start and X/Y.
+        // Note that each routine should be run exactly once in a single log.
+        joystick.back().and(joystick.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
+        joystick.back().and(joystick.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
+        joystick.start().and(joystick.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
+        joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
-    //Intake Rotate Controls (Operator)
-    xboxControllerOP.leftBumper().onTrue(new RotateCommand(rotate, RotateCommand.Position.L));
-    xboxControllerOP.rightBumper().onTrue(new RotateCommand(rotate, RotateCommand.Position.R));
-    xboxControllerOP.rightBumper().and(() -> xboxControllerOP.leftBumper().getAsBoolean()).onTrue(new RotateCommand(rotate, RotateCommand.Position.ZERO));
+        // reset the field-centric heading on left bumper press
+        joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
-    //Intake Pivot Controls (Operator)
-    xboxControllerOP.x().onTrue(new PivotCommand(pivot, PivotCommand.Positions.L1));
-    xboxControllerOP.b().onTrue(new PivotCommand(pivot, PivotCommand.Positions.L23));
-    xboxControllerOP.y().onTrue(new PivotCommand(pivot, PivotCommand.Positions.L4));
-    xboxControllerOP.a().onTrue(new PivotCommand(pivot, PivotCommand.Positions.GROUND));
-    xboxControllerOP.a().and(() -> xboxControllerOP.b().getAsBoolean()).onTrue(new PivotCommand(pivot, PivotCommand.Positions.ZERO));
-  }
+        drivetrain.registerTelemetry(logger::telemeterize);
+    }
 
-  public Command getAutonomousCommand() {
-    return super.getAutonomousCommand();
-  }
+    public Command getAutonomousCommand() {
+        return Commands.print("No autonomous command configured");
+    }
 }

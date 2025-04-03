@@ -1,6 +1,7 @@
 package frc.robot.Commands;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Subsystems.RotateSubsystem;
 
@@ -21,11 +22,11 @@ public class RotateCommand  extends Command{
        switch (pose) {
 
         case ZERO:
-            rotatePose = new Rotation2d(90);
+            rotatePose = new Rotation2d(Units.degreesToRadians(90));
             break;
 
         case L:
-            rotatePose = new Rotation2d(180);
+            rotatePose = new Rotation2d(Units.degreesToRadians(180));
             break;
 
         case R:
