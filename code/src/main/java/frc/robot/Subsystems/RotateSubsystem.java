@@ -1,7 +1,5 @@
 package frc.robot.Subsystems;
 
-import org.dyn4j.geometry.Rotation;
-
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;

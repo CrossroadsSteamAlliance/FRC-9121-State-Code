@@ -1,34 +1,57 @@
 package frc.robot.Commands;
 
+import java.util.HashMap;
+
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.IntakeSubsystem;
+import frc.robot.Constants.IntakeConstats;
+import frc.robot.Subsystems.IntakeSubsystem;
 
-public class IntakeCommand extends Command {
-    private final IntakeSubsystem intake;
-    private final boolean isIntaking;
+public class IntakeCommand extends Command{
+    public static enum Speed {FULL_IN, HALF_IN, FULL_OUT, HALF_OUT}
+    private Speed state;
 
-    public IntakeCommand(IntakeSubsystem intake, boolean isIntaking) {
-        this.intake = intake;
-        this.isIntaking = isIntaking;
-        addRequirements(intake);
+    IntakeSubsystem subsystem;
+
+    public IntakeCommand(IntakeSubsystem subsystem, Speed state){
+        this.subsystem = subsystem;
+        this.state = state;
+
+        addRequirements(this.subsystem);
     }
 
     @Override
     public void initialize() {
-        if (isIntaking) {
-            intake.intake();  // Start intake
-        } else {
-            intake.outtake(); // Start outtake
-        }
+       switch (state) {
+        case FULL_IN:
+            subsystem.intake(IntakeConstats.kIntakeVelocity);
+            break;
+
+        case HALF_IN:
+            subsystem.intake(IntakeConstats.kIntakeVelocity / 2);
+            break;
+
+        case FULL_OUT:
+            subsystem.outtake(IntakeConstats.kIntakeVelocity);
+            break;
+
+        case HALF_OUT:
+            subsystem.outtake(IntakeConstats.kIntakeVelocity / 2);
+            break;
+
+        default:
+            subsystem.stopIntake();
+            break;
+       }
     }
 
     @Override
     public void end(boolean interrupted) {
-        intake.hold(); // Switch to hold mode instead of stopping
+        subsystem.stopIntake();
     }
 
     @Override
     public boolean isFinished() {
-        return false; // Runs until button is released
+      return false;
     }
+
 }
